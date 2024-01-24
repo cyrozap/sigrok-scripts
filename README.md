@@ -2,6 +2,8 @@
 
 Miscellaneous scripts for generating and processing [sigrok][sigrok] data files.
 
+* [sr-i2c-to-txt.sh](sr-i2c-to-txt.sh): A shell script for decoding sigrok
+  captures of I2C transactions.
 * [waveforms-csv-to-sr.py](waveforms-csv-to-sr.py): A Python script for
   converting [Digilent WaveForms][waveforms] "Raw Data" format CSV files to
   sigrok's [srzip][srzip] (`.sr`) format.
