@@ -20,6 +20,7 @@ import argparse
 import csv
 import struct
 import zipfile
+from pathlib import Path
 from typing import Iterator
 
 
@@ -29,21 +30,22 @@ def main() -> None:
     parser.add_argument("output", type=str, help="The sigrok srzip output file.")
     args: argparse.Namespace = parser.parse_args()
 
-    lines: list[str] = open(args.csv, "r").readlines()
+    csv_file: Path = Path(args.csv)
+    lines: list[str] = csv_file.open("r").readlines()
     header: list[str] = lines[:6]
-    csvfile: list[str] = lines[8:]
+    csv_data: list[str] = lines[8:]
 
     header_type: str = header[0]
     assert header_type.rstrip("\n") == "#Digilent WaveForms Logic Analyzer Raw Data"
 
     sample_rate: int = int(float(header[4].rstrip("Hz\n").split(": ")[1]))
     sample_count: int = int(header[5].rstrip("\n").split(": ")[1])
-    assert sample_count == len(csvfile)
+    assert sample_count == len(csv_data)
     unit_size: int = 2
     logic: bytearray = bytearray(sample_count * unit_size)
 
     offset: int = 0
-    reader: Iterator[list[str]] = csv.reader(csvfile)
+    reader: Iterator[list[str]] = csv.reader(csv_data)
     for (timestamp, sample) in reader:
         struct.pack_into("<H", logic, offset, int(sample))
         offset += unit_size
