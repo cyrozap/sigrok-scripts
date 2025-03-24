@@ -20,35 +20,36 @@ import argparse
 import csv
 import struct
 import zipfile
+from typing import Iterator
 
 
-def main():
-    parser = argparse.ArgumentParser()
+def main() -> None:
+    parser: argparse.ArgumentParser = argparse.ArgumentParser()
     parser.add_argument("csv", type=str, help="The input CSV file (WaveForms \"Raw Data\" format).")
     parser.add_argument("output", type=str, help="The sigrok srzip output file.")
-    args = parser.parse_args()
+    args: argparse.Namespace = parser.parse_args()
 
-    lines = open(args.csv, 'r').readlines()
-    header = lines[:6]
-    csvfile = lines[8:]
+    lines: list[str] = open(args.csv, 'r').readlines()
+    header: list[str] = lines[:6]
+    csvfile: list[str] = lines[8:]
 
-    sample_rate = int(float(header[4].rstrip('Hz\n').split(': ')[1]))
-    sample_count = int(header[5].rstrip('\n').split(': ')[1])
+    sample_rate: int = int(float(header[4].rstrip('Hz\n').split(': ')[1]))
+    sample_count: int = int(header[5].rstrip('\n').split(': ')[1])
     assert sample_count == len(csvfile)
-    unit_size = 2
-    logic = bytearray(sample_count * unit_size)
+    unit_size: int = 2
+    logic: bytearray = bytearray(sample_count * unit_size)
 
-    offset = 0
-    reader = csv.reader(csvfile)
+    offset: int = 0
+    reader: Iterator[list[str]] = csv.reader(csvfile)
     for (timestamp, sample) in reader:
         struct.pack_into('<H', logic, offset, int(sample))
         offset += unit_size
 
-    probe_count = 16
-    probes = "\n".join(["probe{}=DIO {}".format(i+1, i) for i in range(probe_count)])
-    metadata = "[global]\nsigrok version=0.5.0\n\n[device 1]\ncapturefile=logic-1\ntotal probes={}\nsamplerate={} MHz\ntotal analog=0\n{}\nunitsize={}\n".format(probe_count, sample_rate//1000000, probes, unit_size)
+    probe_count: int = 16
+    probes: str = "\n".join(["probe{}=DIO {}".format(i+1, i) for i in range(probe_count)])
+    metadata: str = "[global]\nsigrok version=0.5.0\n\n[device 1]\ncapturefile=logic-1\ntotal probes={}\nsamplerate={} MHz\ntotal analog=0\n{}\nunitsize={}\n".format(probe_count, sample_rate//1000000, probes, unit_size)
 
-    sr = zipfile.ZipFile(args.output, 'w', zipfile.ZIP_DEFLATED)
+    sr: zipfile.ZipFile = zipfile.ZipFile(args.output, 'w', zipfile.ZIP_DEFLATED)
     sr.writestr('version', '2', zipfile.ZIP_STORED)
     sr.writestr('metadata', metadata)
     sr.writestr('logic-1-1', logic)

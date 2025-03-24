@@ -31,13 +31,13 @@ class Buffer:
     data: bytes
 
 
-def main():
-    state = None
-    addr = 0
-    bufs = []
-    bufs_idx = 0
+def main() -> None:
+    state: int | None = None
+    addr: int = 0
+    bufs: list[Buffer] = []
+    bufs_idx: int = 0
     for line in fileinput.input():
-        line_parts = line.strip('\n').split(": ")
+        line_parts: list[str] = line.strip('\n').split(": ")
         if line_parts[1:] == ["Address write", "50"]:
             state = ADDR_WRITE
             addr = 0
@@ -55,13 +55,13 @@ def main():
             if line_parts[1] == "Data read":
                 bufs[bufs_idx-1].data += bytes.fromhex(line_parts[2])
 
-    length = 0
+    length: int = 0
     for buf in bufs:
-        new_len = buf.addr + len(buf.data)
+        new_len: int = buf.addr + len(buf.data)
         if new_len > length:
             length = new_len
 
-    binary = bytearray(b'\xff' * length)
+    binary: bytearray = bytearray(b'\xff' * length)
     for buf in bufs:
         binary[buf.addr:buf.addr+len(buf.data)] = buf.data
 
