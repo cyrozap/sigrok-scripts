@@ -1,7 +1,7 @@
 #!/bin/sh
 # SPDX-License-Identifier: 0BSD
 
-# Copyright (C) 2017 by Forest Crossman <cyrozap@gmail.com>
+# Copyright (C) 2017, 2025 by Forest Crossman <cyrozap@gmail.com>
 #
 # Permission to use, copy, modify, and/or distribute this software for
 # any purpose with or without fee is hereby granted.
@@ -17,4 +17,4 @@
 
 set -euo pipefail
 
-sigrok-cli -i $1 -P i2c:scl=SCL:sda=SDA -A i2c=data-read:data-write:address-read:address-write
+sigrok-cli -i "$1" -P i2c:scl=SCL:sda=SDA -A i2c=data-read:data-write:address-read:address-write
