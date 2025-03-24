@@ -37,14 +37,14 @@ def main() -> None:
     bufs: list[Buffer] = []
     bufs_idx: int = 0
     for line in fileinput.input():
-        line_parts: list[str] = line.strip('\n').split(": ")
+        line_parts: list[str] = line.strip("\n").split(": ")
         if line_parts[1:] == ["Address write", "50"]:
             state = ADDR_WRITE
             addr = 0
             continue
         elif line_parts[1:] == ["Address read", "50"]:
             state = ADDR_READ
-            bufs.append(Buffer(addr=addr, data=b''))
+            bufs.append(Buffer(addr=addr, data=b""))
             bufs_idx += 1
             continue
 
@@ -61,7 +61,7 @@ def main() -> None:
         if new_len > length:
             length = new_len
 
-    binary: bytearray = bytearray(b'\xff' * length)
+    binary: bytearray = bytearray(b"\xff" * length)
     for buf in bufs:
         binary[buf.addr:buf.addr+len(buf.data)] = buf.data
 

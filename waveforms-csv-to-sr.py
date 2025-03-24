@@ -29,12 +29,12 @@ def main() -> None:
     parser.add_argument("output", type=str, help="The sigrok srzip output file.")
     args: argparse.Namespace = parser.parse_args()
 
-    lines: list[str] = open(args.csv, 'r').readlines()
+    lines: list[str] = open(args.csv, "r").readlines()
     header: list[str] = lines[:6]
     csvfile: list[str] = lines[8:]
 
-    sample_rate: int = int(float(header[4].rstrip('Hz\n').split(': ')[1]))
-    sample_count: int = int(header[5].rstrip('\n').split(': ')[1])
+    sample_rate: int = int(float(header[4].rstrip("Hz\n").split(": ")[1]))
+    sample_count: int = int(header[5].rstrip("\n").split(": ")[1])
     assert sample_count == len(csvfile)
     unit_size: int = 2
     logic: bytearray = bytearray(sample_count * unit_size)
@@ -42,17 +42,17 @@ def main() -> None:
     offset: int = 0
     reader: Iterator[list[str]] = csv.reader(csvfile)
     for (timestamp, sample) in reader:
-        struct.pack_into('<H', logic, offset, int(sample))
+        struct.pack_into("<H", logic, offset, int(sample))
         offset += unit_size
 
     probe_count: int = 16
     probes: str = "\n".join(["probe{}=DIO {}".format(i+1, i) for i in range(probe_count)])
     metadata: str = "[global]\nsigrok version=0.5.0\n\n[device 1]\ncapturefile=logic-1\ntotal probes={}\nsamplerate={} MHz\ntotal analog=0\n{}\nunitsize={}\n".format(probe_count, sample_rate//1000000, probes, unit_size)
 
-    sr: zipfile.ZipFile = zipfile.ZipFile(args.output, 'w', zipfile.ZIP_DEFLATED)
-    sr.writestr('version', '2', zipfile.ZIP_STORED)
-    sr.writestr('metadata', metadata)
-    sr.writestr('logic-1-1', logic)
+    sr: zipfile.ZipFile = zipfile.ZipFile(args.output, "w", zipfile.ZIP_DEFLATED)
+    sr.writestr("version", "2", zipfile.ZIP_STORED)
+    sr.writestr("metadata", metadata)
+    sr.writestr("logic-1-1", logic)
     sr.close()
 
 
