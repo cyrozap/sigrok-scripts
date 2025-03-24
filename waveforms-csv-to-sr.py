@@ -54,7 +54,7 @@ def main() -> None:
         "[device 1]",
         "capturefile=logic-1",
         f"total probes={probe_count}",
-        f"samplerate={sample_rate//1000000} MHz",
+        f"samplerate={sample_rate//1_000_000} MHz",
         "total analog=0",
         probes,
         f"unitsize={unit_size}",
