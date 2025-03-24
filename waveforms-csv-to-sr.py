@@ -47,7 +47,19 @@ def main() -> None:
 
     probe_count: int = 16
     probes: str = "\n".join(["probe{}=DIO {}".format(i+1, i) for i in range(probe_count)])
-    metadata: str = "[global]\nsigrok version=0.5.0\n\n[device 1]\ncapturefile=logic-1\ntotal probes={}\nsamplerate={} MHz\ntotal analog=0\n{}\nunitsize={}\n".format(probe_count, sample_rate//1000000, probes, unit_size)
+    metadata: str = "\n".join([
+        "[global]",
+        "sigrok version=0.5.0",
+        "",
+        "[device 1]",
+        "capturefile=logic-1",
+        f"total probes={probe_count}",
+        f"samplerate={sample_rate//1000000} MHz",
+        "total analog=0",
+        probes,
+        f"unitsize={unit_size}",
+        "",
+    ])
 
     sr: zipfile.ZipFile = zipfile.ZipFile(args.output, "w", zipfile.ZIP_DEFLATED)
     sr.writestr("version", "2", zipfile.ZIP_STORED)
