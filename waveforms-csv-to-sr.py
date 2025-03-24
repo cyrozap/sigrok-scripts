@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # SPDX-License-Identifier: 0BSD
 
-# Copyright (C) 2020 by Forest Crossman <cyrozap@gmail.com>
+# Copyright (C) 2020, 2025 by Forest Crossman <cyrozap@gmail.com>
 #
 # Permission to use, copy, modify, and/or distribute this software for
 # any purpose with or without fee is hereby granted.
@@ -41,8 +41,7 @@ def main():
     offset = 0
     reader = csv.reader(csvfile)
     for (timestamp, sample) in reader:
-        sample = int(sample)
-        struct.pack_into('<H', logic, offset, sample)
+        struct.pack_into('<H', logic, offset, int(sample))
         offset += unit_size
 
     probe_count = 16
