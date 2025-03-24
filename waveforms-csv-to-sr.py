@@ -66,10 +66,10 @@ def main() -> None:
         "",
     ])
 
-    sr: zipfile.ZipFile = zipfile.ZipFile(args.output, "w", zipfile.ZIP_DEFLATED)
+    sr: zipfile.ZipFile = zipfile.ZipFile(args.output, "w")
     sr.writestr("version", "2", zipfile.ZIP_STORED)
-    sr.writestr("metadata", metadata)
-    sr.writestr("logic-1-1", logic)
+    sr.writestr("metadata", metadata, zipfile.ZIP_DEFLATED)
+    sr.writestr("logic-1-1", logic, zipfile.ZIP_DEFLATED)
     sr.close()
 
 
