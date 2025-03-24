@@ -19,10 +19,23 @@
 import argparse
 import csv
 import struct
+import time
 import zipfile
 from pathlib import Path
 from typing import Iterator
 
+
+def get_zipinfo_with_extended_time(filename: str, mtime: float) -> zipfile.ZipInfo:
+    # Set the DOS modification time to UTC
+    date_time: tuple[int, int, int, int, int, int] = time.gmtime(mtime)[:6]
+
+    # Create the ZipInfo object
+    zi: zipfile.ZipInfo = zipfile.ZipInfo(filename, date_time)
+
+    # Add extended timestamp with the Unix modification time
+    zi.extra += struct.pack("<HHBI", 0x5455, 5, 0x01, int(mtime))
+
+    return zi
 
 def main() -> None:
     parser: argparse.ArgumentParser = argparse.ArgumentParser()
@@ -31,6 +44,8 @@ def main() -> None:
     args: argparse.Namespace = parser.parse_args()
 
     csv_file: Path = Path(args.csv)
+    mtime: float = csv_file.stat().st_mtime
+
     lines: list[str] = csv_file.open("r").readlines()
     header: list[str] = lines[:6]
     csv_data: list[str] = lines[8:]
@@ -67,9 +82,9 @@ def main() -> None:
     ])
 
     sr: zipfile.ZipFile = zipfile.ZipFile(args.output, "w")
-    sr.writestr("version", "2", zipfile.ZIP_STORED)
-    sr.writestr("metadata", metadata, zipfile.ZIP_DEFLATED)
-    sr.writestr("logic-1-1", logic, zipfile.ZIP_DEFLATED)
+    sr.writestr(get_zipinfo_with_extended_time("version", mtime), "2", zipfile.ZIP_STORED)
+    sr.writestr(get_zipinfo_with_extended_time("metadata", mtime), metadata, zipfile.ZIP_DEFLATED)
+    sr.writestr(get_zipinfo_with_extended_time("logic-1-1", mtime), logic, zipfile.ZIP_DEFLATED)
     sr.close()
 
 
