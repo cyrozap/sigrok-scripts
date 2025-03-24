@@ -33,6 +33,9 @@ def main() -> None:
     header: list[str] = lines[:6]
     csvfile: list[str] = lines[8:]
 
+    header_type: str = header[0]
+    assert header_type.rstrip("\n") == "#Digilent WaveForms Logic Analyzer Raw Data"
+
     sample_rate: int = int(float(header[4].rstrip("Hz\n").split(": ")[1]))
     sample_count: int = int(header[5].rstrip("\n").split(": ")[1])
     assert sample_count == len(csvfile)
