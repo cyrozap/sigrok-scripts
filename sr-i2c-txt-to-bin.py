@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # SPDX-License-Identifier: 0BSD
 
-# Copyright (C) 2020 by Forest Crossman <cyrozap@gmail.com>
+# Copyright (C) 2020, 2025 by Forest Crossman <cyrozap@gmail.com>
 #
 # Permission to use, copy, modify, and/or distribute this software for
 # any purpose with or without fee is hereby granted.
@@ -30,23 +30,23 @@ def main():
     bufs = []
     bufs_idx = 0
     for line in fileinput.input():
-        line = line.strip('\n').split(": ")
-        if line[1:] == ["Address write", "50"]:
+        line_parts = line.strip('\n').split(": ")
+        if line_parts[1:] == ["Address write", "50"]:
             state = ADDR_WRITE
             addr = 0
             continue
-        elif line[1:] == ["Address read", "50"]:
+        elif line_parts[1:] == ["Address read", "50"]:
             state = ADDR_READ
             bufs.append([addr, b''])
             bufs_idx += 1
             continue
 
         if state == ADDR_WRITE:
-            if line[1] == "Data write":
-                addr = ((addr << 8) & 0xffff) | bytes.fromhex(line[2])[0]
+            if line_parts[1] == "Data write":
+                addr = ((addr << 8) & 0xffff) | bytes.fromhex(line_parts[2])[0]
         elif state == ADDR_READ:
-            if line[1] == "Data read":
-                bufs[bufs_idx-1][1] += bytes.fromhex(line[2])
+            if line_parts[1] == "Data read":
+                bufs[bufs_idx-1][1] += bytes.fromhex(line_parts[2])
 
     length = 0
     for (addr, buf) in bufs:
