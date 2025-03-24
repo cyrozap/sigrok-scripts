@@ -18,10 +18,17 @@
 
 import fileinput
 import sys
+from dataclasses import dataclass
 
 
 ADDR_WRITE = 0
 ADDR_READ = 1
+
+
+@dataclass
+class Buffer:
+    addr: int
+    data: bytes
 
 
 def main():
@@ -37,7 +44,7 @@ def main():
             continue
         elif line_parts[1:] == ["Address read", "50"]:
             state = ADDR_READ
-            bufs.append([addr, b''])
+            bufs.append(Buffer(addr=addr, data=b''))
             bufs_idx += 1
             continue
 
@@ -46,17 +53,17 @@ def main():
                 addr = ((addr << 8) & 0xffff) | bytes.fromhex(line_parts[2])[0]
         elif state == ADDR_READ:
             if line_parts[1] == "Data read":
-                bufs[bufs_idx-1][1] += bytes.fromhex(line_parts[2])
+                bufs[bufs_idx-1].data += bytes.fromhex(line_parts[2])
 
     length = 0
-    for (addr, buf) in bufs:
-        new_len = addr + len(buf)
+    for buf in bufs:
+        new_len = buf.addr + len(buf.data)
         if new_len > length:
             length = new_len
 
     binary = bytearray(b'\xff' * length)
-    for (addr, buf) in bufs:
-        binary[addr:addr+len(buf)] = buf
+    for buf in bufs:
+        binary[buf.addr:buf.addr+len(buf.data)] = buf.data
 
     sys.stdout.buffer.write(bytes(binary))
 
