@@ -19,16 +19,18 @@
 import argparse
 import sys
 from dataclasses import dataclass
-
-
-ADDR_WRITE = 0
-ADDR_READ = 1
+from enum import auto, Enum
 
 
 @dataclass
 class Buffer:
     addr: int
     data: bytes
+
+class State(Enum):
+    INIT = auto()
+    ADDR_WRITE = auto()
+    ADDR_READ = auto()
 
 
 def parse_args() -> argparse.Namespace:
@@ -42,7 +44,7 @@ def parse_args() -> argparse.Namespace:
 def main() -> None:
     args: argparse.Namespace = parse_args()
 
-    state: int | None = None
+    state: State = State.INIT
     addr: int = 0
     bufs: list[Buffer] = []
     bufs_idx: int = 0
@@ -50,19 +52,19 @@ def main() -> None:
         for line in infile:
             line_parts: list[str] = line.strip("\n").split(": ")
             if line_parts[1:] == ["Address write", f"{args.address:02X}"]:
-                state = ADDR_WRITE
+                state = State.ADDR_WRITE
                 addr = 0
                 continue
             elif line_parts[1:] == ["Address read", f"{args.address:02X}"]:
-                state = ADDR_READ
+                state = State.ADDR_READ
                 bufs.append(Buffer(addr=addr, data=b""))
                 bufs_idx += 1
                 continue
 
-            if state == ADDR_WRITE:
+            if state == State.ADDR_WRITE:
                 if line_parts[1] == "Data write":
                     addr = ((addr << 8) & 0xffff) | bytes.fromhex(line_parts[2])[0]
-            elif state == ADDR_READ:
+            elif state == State.ADDR_READ:
                 if line_parts[1] == "Data read":
                     bufs[bufs_idx-1].data += bytes.fromhex(line_parts[2])
 
