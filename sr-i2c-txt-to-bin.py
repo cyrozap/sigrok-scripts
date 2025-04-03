@@ -16,7 +16,7 @@
 # PERFORMANCE OF THIS SOFTWARE.
 
 
-import fileinput
+import argparse
 import sys
 from dataclasses import dataclass
 
@@ -31,29 +31,40 @@ class Buffer:
     data: bytes
 
 
+def parse_args() -> argparse.Namespace:
+    parser: argparse.ArgumentParser = argparse.ArgumentParser(description="Convert I2C text log to binary.")
+    parser.add_argument("-a", "--address", type=lambda x: int(x, 16), default=0x50,
+                        help="EEPROM address in hexadecimal (default: 0x50).")
+    parser.add_argument("file", nargs="?", type=argparse.FileType("r"), default=sys.stdin,
+                        help="Input I2C log file. If not specified, reads from stdin.")
+    return parser.parse_args()
+
 def main() -> None:
+    args: argparse.Namespace = parse_args()
+
     state: int | None = None
     addr: int = 0
     bufs: list[Buffer] = []
     bufs_idx: int = 0
-    for line in fileinput.input():
-        line_parts: list[str] = line.strip("\n").split(": ")
-        if line_parts[1:] == ["Address write", "50"]:
-            state = ADDR_WRITE
-            addr = 0
-            continue
-        elif line_parts[1:] == ["Address read", "50"]:
-            state = ADDR_READ
-            bufs.append(Buffer(addr=addr, data=b""))
-            bufs_idx += 1
-            continue
+    with args.file as infile:
+        for line in infile:
+            line_parts: list[str] = line.strip("\n").split(": ")
+            if line_parts[1:] == ["Address write", f"{args.address:02X}"]:
+                state = ADDR_WRITE
+                addr = 0
+                continue
+            elif line_parts[1:] == ["Address read", f"{args.address:02X}"]:
+                state = ADDR_READ
+                bufs.append(Buffer(addr=addr, data=b""))
+                bufs_idx += 1
+                continue
 
-        if state == ADDR_WRITE:
-            if line_parts[1] == "Data write":
-                addr = ((addr << 8) & 0xffff) | bytes.fromhex(line_parts[2])[0]
-        elif state == ADDR_READ:
-            if line_parts[1] == "Data read":
-                bufs[bufs_idx-1].data += bytes.fromhex(line_parts[2])
+            if state == ADDR_WRITE:
+                if line_parts[1] == "Data write":
+                    addr = ((addr << 8) & 0xffff) | bytes.fromhex(line_parts[2])[0]
+            elif state == ADDR_READ:
+                if line_parts[1] == "Data read":
+                    bufs[bufs_idx-1].data += bytes.fromhex(line_parts[2])
 
     length: int = 0
     for buf in bufs:
