@@ -21,6 +21,7 @@ import sys
 from dataclasses import dataclass
 from enum import auto, Enum
 from io import TextIOWrapper
+from typing import Iterable
 
 
 @dataclass
@@ -42,12 +43,12 @@ def parse_args() -> argparse.Namespace:
                         help="Input I2C log file. If not specified, reads from stdin.")
     return parser.parse_args()
 
-def i2c_log_to_bin(file: TextIOWrapper, address: int) -> None:
+def i2c_log_to_bin(lines: Iterable[str], address: int) -> bytes:
     state: State = State.INIT
     addr: int = 0
     bufs: list[Buffer] = []
     bufs_idx: int = 0
-    for line in file:
+    for line in lines:
         line_parts: list[str] = line.strip("\n").split(": ")
         if line_parts[1:] == ["Address write", f"{address:02X}"]:
             state = State.ADDR_WRITE
@@ -76,12 +77,16 @@ def i2c_log_to_bin(file: TextIOWrapper, address: int) -> None:
     for buf in bufs:
         binary[buf.addr:buf.addr+len(buf.data)] = buf.data
 
-    sys.stdout.buffer.write(bytes(binary))
+    return bytes(binary)
 
 def main() -> None:
     args: argparse.Namespace = parse_args()
 
-    i2c_log_to_bin(args.file, args.address)
+    logfile: TextIOWrapper = args.file
+
+    binary: bytes = i2c_log_to_bin(logfile, args.address)
+
+    sys.stdout.buffer.write(binary)
 
 
 if __name__ == "__main__":
