@@ -48,25 +48,24 @@ def main() -> None:
     addr: int = 0
     bufs: list[Buffer] = []
     bufs_idx: int = 0
-    with args.file as infile:
-        for line in infile:
-            line_parts: list[str] = line.strip("\n").split(": ")
-            if line_parts[1:] == ["Address write", f"{args.address:02X}"]:
-                state = State.ADDR_WRITE
-                addr = 0
-                continue
-            elif line_parts[1:] == ["Address read", f"{args.address:02X}"]:
-                state = State.ADDR_READ
-                bufs.append(Buffer(addr=addr, data=b""))
-                bufs_idx += 1
-                continue
+    for line in args.file:
+        line_parts: list[str] = line.strip("\n").split(": ")
+        if line_parts[1:] == ["Address write", f"{args.address:02X}"]:
+            state = State.ADDR_WRITE
+            addr = 0
+            continue
+        elif line_parts[1:] == ["Address read", f"{args.address:02X}"]:
+            state = State.ADDR_READ
+            bufs.append(Buffer(addr=addr, data=b""))
+            bufs_idx += 1
+            continue
 
-            if state == State.ADDR_WRITE:
-                if line_parts[1] == "Data write":
-                    addr = ((addr << 8) & 0xffff) | bytes.fromhex(line_parts[2])[0]
-            elif state == State.ADDR_READ:
-                if line_parts[1] == "Data read":
-                    bufs[bufs_idx-1].data += bytes.fromhex(line_parts[2])
+        if state == State.ADDR_WRITE:
+            if line_parts[1] == "Data write":
+                addr = ((addr << 8) & 0xffff) | bytes.fromhex(line_parts[2])[0]
+        elif state == State.ADDR_READ:
+            if line_parts[1] == "Data read":
+                bufs[bufs_idx-1].data += bytes.fromhex(line_parts[2])
 
     length: int = 0
     for buf in bufs:
