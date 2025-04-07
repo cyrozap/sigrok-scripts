@@ -20,6 +20,7 @@ import argparse
 import sys
 from dataclasses import dataclass
 from enum import auto, Enum
+from io import TextIOWrapper
 
 
 @dataclass
@@ -41,20 +42,18 @@ def parse_args() -> argparse.Namespace:
                         help="Input I2C log file. If not specified, reads from stdin.")
     return parser.parse_args()
 
-def main() -> None:
-    args: argparse.Namespace = parse_args()
-
+def i2c_log_to_bin(file: TextIOWrapper, address: int) -> None:
     state: State = State.INIT
     addr: int = 0
     bufs: list[Buffer] = []
     bufs_idx: int = 0
-    for line in args.file:
+    for line in file:
         line_parts: list[str] = line.strip("\n").split(": ")
-        if line_parts[1:] == ["Address write", f"{args.address:02X}"]:
+        if line_parts[1:] == ["Address write", f"{address:02X}"]:
             state = State.ADDR_WRITE
             addr = 0
             continue
-        elif line_parts[1:] == ["Address read", f"{args.address:02X}"]:
+        elif line_parts[1:] == ["Address read", f"{address:02X}"]:
             state = State.ADDR_READ
             bufs.append(Buffer(addr=addr, data=b""))
             bufs_idx += 1
@@ -78,6 +77,11 @@ def main() -> None:
         binary[buf.addr:buf.addr+len(buf.data)] = buf.data
 
     sys.stdout.buffer.write(bytes(binary))
+
+def main() -> None:
+    args: argparse.Namespace = parse_args()
+
+    i2c_log_to_bin(args.file, args.address)
 
 
 if __name__ == "__main__":
