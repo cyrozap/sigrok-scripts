@@ -38,7 +38,7 @@ def get_zipinfo_with_extended_time(filename: str, mtime: float) -> zipfile.ZipIn
     return zi
 
 def main() -> None:
-    parser: argparse.ArgumentParser = argparse.ArgumentParser()
+    parser: argparse.ArgumentParser = argparse.ArgumentParser(description="Convert Digilent WaveForms CSV Raw Data to sigrok srzip format.")
     parser.add_argument("csv", type=str, help="The input CSV file (WaveForms \"Raw Data\" format).")
     parser.add_argument("output", type=str, help="The sigrok srzip output file.")
     args: argparse.Namespace = parser.parse_args()
